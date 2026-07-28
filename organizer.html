@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index Organizer | Zero Syntax Break</title>
+  <title>FPixel Organizer v7 | Smart Auto-Patching SaaS Refactor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -201,6 +201,20 @@
     .radio-content strong { font-size: 0.76rem; font-weight: 600; color: var(--text-main); }
     .radio-content p { font-size: 0.68rem; color: var(--text-muted); line-height: 1.35; }
 
+    .badge-auto {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background-color: rgba(16, 185, 129, 0.1);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
     .workspace { display: grid; grid-template-rows: 40px 1fr; min-height: 0; background-color: var(--bg); }
 
     .tabs {
@@ -342,7 +356,7 @@
   <header>
     <div class="brand">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-      Organizer <span>Zero Syntax Break v6</span>
+      FPixel Organizer <span>Smart Auto-Patching v7</span>
     </div>
     <div class="header-actions">
       <button id="btnTogglePaste">
@@ -350,7 +364,7 @@
         Colar Manual
       </button>
       <button id="btnCopyCurrent" disabled>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2-2v1"></path></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
         Copiar Aba
       </button>
       <button id="btnExportZip" class="success" disabled>
@@ -372,7 +386,7 @@
           <div class="dropzone-content">
             <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M12 18v-6"></path><path d="M9 15l3-3 3 3"></path></svg>
             <p>Clique ou arraste o start.html</p>
-            <span>Análise AST sem quebra de sintaxe</span>
+            <span>Ordem segura + Auto-Patcher</span>
           </div>
         </div>
         <div class="file-info" id="fileInfo">
@@ -381,6 +395,9 @@
             <span class="file-size" id="fileSize">0 KB</span>
           </div>
           <button id="btnRemoveFile" style="height:24px; padding:0 6px; font-size:0.68rem;">Limpar</button>
+        </div>
+        <div class="badge-auto">
+          ⚡ Correção Automática de Layout Ativa
         </div>
       </div>
 
@@ -550,28 +567,20 @@
       reader.readAsText(file, "UTF-8");
     }
 
+    // --- NOVA ORDEM DE EXTRAÇÃO E AUTO-PATCHING ---
     function processCode() {
       if (!appState.rawContent) return;
       let htmlContent = appState.rawContent;
 
-      let cssContent = "";
-      const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
-      let match;
-      while ((match = styleRegex.exec(htmlContent)) !== null) {
-        cssContent += match[1].trim() + "\n\n";
-      }
-      htmlContent = htmlContent.replace(styleRegex, '  <link rel="stylesheet" href="css/styles.css" />');
-
+      // 1. PRIMEIRO EXTRAI O JAVASCRIPT
+      // Isso protege as strings internas de código HTML (como generateHtml) da extração de estilos CSS
       let jsContent = "";
       const scriptRegex = /<script[^>]*>([\s\S]*?)<\/script>/gi;
-      while ((match = scriptRegex.exec(htmlContent)) !== null) {
-        if (match[1].trim().length > 0) {
-          jsContent += match[1].trim() + "\n\n";
-        }
-      }
-
       let scriptReplaced = false;
       htmlContent = htmlContent.replace(scriptRegex, (m, g1) => {
+        if (g1.trim().length > 0) {
+          jsContent += g1.trim() + "\n\n";
+        }
         if (!scriptReplaced && g1.trim().length > 0) {
           scriptReplaced = true;
           if (appState.splitMode === 'modular') {
@@ -585,7 +594,18 @@
         return g1.trim().length > 0 ? "" : m;
       });
 
+      // 2. SEGUNDO EXTRAI OS ESTILOS DO HTML LIMPO
+      let cssContent = "";
+      const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+      let match;
+      while ((match = styleRegex.exec(htmlContent)) !== null) {
+        cssContent += match[1].trim() + "\n\n";
+      }
+      htmlContent = htmlContent.replace(styleRegex, '  <link rel="stylesheet" href="css/styles.css" />');
       htmlContent = htmlContent.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+
+      // 3. APLICA O AUTO-PATCHER NO JAVASCRIPT
+      jsContent = autoPatchGenerateHtml(jsContent);
 
       appState.files["html"] = { name: "index.html", content: htmlContent, lines: countLines(htmlContent) };
       appState.files["css"] = { name: "css/styles.css", content: cssContent.trim(), lines: countLines(cssContent) };
@@ -604,15 +624,28 @@
       updateTabs();
       updateStats();
       switchTab(appState.activeTab);
-      showToast("Arquivos processados sem erro de escopo!");
+      showToast("SaaS fatiado e layout auto-corrigido com sucesso!");
     }
 
-    // --- SCANNER SINTÁTICO DE ESCOPO FECHADO (SYNTAX-SAFE CUTTER) ---
-    // Garante que chaves {} e parênteses () estejam 100% zerados antes de cortar um arquivo
+    // Corrige automaticamente qualquer corrupção anterior no generateHtml()
+    function autoPatchGenerateHtml(js) {
+      let patched = js;
+      // Remove tentativas anteriores de loops cssAcumulado
+      patched = patched.replace(/let\s+cssAcumulado\s*=\s*"";[\s\S]*?for\s*\(\s*const\s+sheet\s+of\s+document\.styleSheets\s*\)\s*\{[\s\S]*?catch\s*\(\s*e\s*\)\s*\{\s*\}\s*\}/gi, "// [Auto-Patched by v7: Loop cssAcumulado removido]");
+      
+      // As 4 variáveis reais do site que devem ir dentro da tag <style> no momento do export
+      const targetStyle = '<style>\\n    ${baseCss}\\n    ${tabletCss}\\n    ${mobileCss}\\n    ${animationsCss}\\n  </style>';
+      
+      // Substitui qualquer resíduo de link externo ou cssAcumulado pela tag <style> com as 4 variáveis
+      patched = patched.replace(/<link[^>]*styles\.css[^>]*>/gi, targetStyle);
+      patched = patched.replace(/<style>\s*\$\{\s*cssAcumulado\s*\}\s*<\/style>/gi, targetStyle);
+      
+      return patched;
+    }
+
     function findSafeCutPoint(code, startIndex) {
       if (startIndex <= 0 || startIndex >= code.length) return -1;
       let braces = 0, parens = 0, brackets = 0;
-      
       for (let i = 0; i < code.length; i++) {
         const char = code[i];
         if (char === '{') braces++;
@@ -650,10 +683,10 @@
       const enginePart = fullJs.substring(cut2, cut3).trim();
       const appPart    = fullJs.substring(cut3).trim();
 
-      appState.files["js_config"] = { name: "js/config.js", content: "// --- SaaS Config & Constants ---\n\n" + configPart, lines: countLines(configPart) };
-      appState.files["js_state"]  = { name: "js/state.js",  content: "// --- Application State & DOM ---\n\n" + statePart,  lines: countLines(statePart) };
-      appState.files["js_engine"] = { name: "js/engine.js", content: "// --- Core Rendering & Logic ---\n\n" + enginePart, lines: countLines(enginePart) };
-      appState.files["js"]        = { name: "js/app.js",    content: "// --- UI & Initialization ---\n\n" + appPart,    lines: countLines(appPart) };
+      appState.files["js_config"] = { name: "js/config.js", content: "// --- FPixel SaaS Config & Constants ---\n\n" + configPart, lines: countLines(configPart) };
+      appState.files["js_state"]  = { name: "js/state.js",  content: "// --- FPixel Application State & DOM ---\n\n" + statePart,  lines: countLines(statePart) };
+      appState.files["js_engine"] = { name: "js/engine.js", content: "// --- FPixel Core Rendering & Logic ---\n\n" + enginePart, lines: countLines(enginePart) };
+      appState.files["js"]        = { name: "js/app.js",    content: "// --- FPixel UI & Initialization ---\n\n" + appPart,    lines: countLines(appPart) };
     }
 
     function countLines(text) { return text ? text.split(/\r\n|\r|\n/).length : 0; }
@@ -700,7 +733,7 @@
 
     dom.btnExportZip.addEventListener('click', () => {
       if (!appState.isProcessed) return;
-      const zip = new JSZip(), root = zip.folder("SaaS_Project");
+      const zip = new JSZip(), root = zip.folder("FPixel_SaaS_Project");
       root.file("index.html", appState.files["html"].content);
       root.folder("css").file("styles.css", appState.files["css"].content);
       const jsFolder = root.folder("js");
@@ -712,7 +745,7 @@
       jsFolder.file("app.js", appState.files["js"].content);
       zip.generateAsync({ type: "blob" }).then((blob) => {
         const url = URL.createObjectURL(blob), a = document.createElement("a");
-        a.href = url; a.download = `SaaS_Project.zip`;
+        a.href = url; a.download = `FPixel_SaaS_Project.zip`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
         showToast("Arquivo .ZIP baixado com sucesso!");
       });
