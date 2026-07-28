@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FPixel Organizer v6 | Zero Syntax Break</title>
+  <title>Index Organizer | Zero Syntax Break</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -342,7 +342,7 @@
   <header>
     <div class="brand">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-      FPixel Organizer <span>Zero Syntax Break v6</span>
+      Organizer <span>Zero Syntax Break v6</span>
     </div>
     <div class="header-actions">
       <button id="btnTogglePaste">
@@ -650,10 +650,10 @@
       const enginePart = fullJs.substring(cut2, cut3).trim();
       const appPart    = fullJs.substring(cut3).trim();
 
-      appState.files["js_config"] = { name: "js/config.js", content: "// --- FPixel SaaS Config & Constants ---\n\n" + configPart, lines: countLines(configPart) };
-      appState.files["js_state"]  = { name: "js/state.js",  content: "// --- FPixel Application State & DOM ---\n\n" + statePart,  lines: countLines(statePart) };
-      appState.files["js_engine"] = { name: "js/engine.js", content: "// --- FPixel Core Rendering & Logic ---\n\n" + enginePart, lines: countLines(enginePart) };
-      appState.files["js"]        = { name: "js/app.js",    content: "// --- FPixel UI & Initialization ---\n\n" + appPart,    lines: countLines(appPart) };
+      appState.files["js_config"] = { name: "js/config.js", content: "// --- SaaS Config & Constants ---\n\n" + configPart, lines: countLines(configPart) };
+      appState.files["js_state"]  = { name: "js/state.js",  content: "// --- Application State & DOM ---\n\n" + statePart,  lines: countLines(statePart) };
+      appState.files["js_engine"] = { name: "js/engine.js", content: "// --- Core Rendering & Logic ---\n\n" + enginePart, lines: countLines(enginePart) };
+      appState.files["js"]        = { name: "js/app.js",    content: "// --- UI & Initialization ---\n\n" + appPart,    lines: countLines(appPart) };
     }
 
     function countLines(text) { return text ? text.split(/\r\n|\r|\n/).length : 0; }
@@ -700,7 +700,7 @@
 
     dom.btnExportZip.addEventListener('click', () => {
       if (!appState.isProcessed) return;
-      const zip = new JSZip(), root = zip.folder("FPixel_SaaS_Project");
+      const zip = new JSZip(), root = zip.folder("SaaS_Project");
       root.file("index.html", appState.files["html"].content);
       root.folder("css").file("styles.css", appState.files["css"].content);
       const jsFolder = root.folder("js");
@@ -712,7 +712,7 @@
       jsFolder.file("app.js", appState.files["js"].content);
       zip.generateAsync({ type: "blob" }).then((blob) => {
         const url = URL.createObjectURL(blob), a = document.createElement("a");
-        a.href = url; a.download = `FPixel_SaaS_Project.zip`;
+        a.href = url; a.download = `SaaS_Project.zip`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
         showToast("Arquivo .ZIP baixado com sucesso!");
       });
