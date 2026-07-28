@@ -1,0 +1,728 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FPixel Organizer v6 | Zero Syntax Break</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    :root {
+      --bg: #f8f9fa;
+      --panel: #ffffff;
+      --panel-elevated: #f1f3f5;
+      --border: #e2e8f0;
+      --border-focus: #cbd5e1;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --accent-blue: #0284c7;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --btn-bg: #f1f5f9;
+      --btn-hover: #e2e8f0;
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: 56px 1fr;
+      overflow: hidden;
+    }
+
+    svg { display: block; flex-shrink: 0; pointer-events: none; }
+
+    header {
+      background-color: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-main);
+    }
+
+    .brand svg { width: 18px; height: 18px; stroke: var(--accent-blue); stroke-width: 2.2; }
+    .brand span { color: var(--text-muted); font-weight: 400; font-size: 0.85rem; }
+
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+
+    button {
+      background-color: var(--btn-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0 14px;
+      height: 34px;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    button:hover:not(:disabled) { background-color: var(--btn-hover); border-color: var(--border-focus); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    
+    button.primary { background-color: var(--accent-blue); color: #ffffff; border: none; }
+    button.primary:hover:not(:disabled) { filter: brightness(1.08); }
+    
+    button.success { background-color: var(--accent-green); color: #ffffff; border: none; }
+    button.success:hover:not(:disabled) { filter: brightness(1.08); }
+
+    button svg { width: 14px; height: 14px; stroke-width: 2.2; }
+
+    main {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    sidebar {
+      background-color: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 16px;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-title svg { width: 13px; height: 13px; stroke: var(--text-muted); stroke-width: 2.2; }
+
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      background-color: var(--panel-elevated);
+      padding: 20px 12px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s ease;
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--accent-blue);
+      background-color: rgba(2, 132, 199, 0.04);
+    }
+
+    .dropzone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 20;
+    }
+
+    .dropzone-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .dropzone-icon { width: 28px; height: 28px; stroke: var(--text-muted); stroke-width: 1.6; margin-bottom: 4px; }
+    .dropzone:hover .dropzone-icon { stroke: var(--accent-blue); }
+    .dropzone p { font-size: 0.78rem; font-weight: 600; color: var(--text-main); }
+    .dropzone span { font-size: 0.68rem; color: var(--text-muted); }
+
+    .file-info {
+      display: none;
+      background-color: var(--panel-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px;
+      font-size: 0.78rem;
+    }
+
+    .file-info.active { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .file-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+    .file-name { font-weight: 600; color: var(--accent-green); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.78rem; }
+    .file-size { font-size: 0.65rem; color: var(--text-muted); }
+
+    .options-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .radio-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background-color: var(--panel-elevated);
+      padding: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      transition: all 0.15s ease;
+    }
+
+    .radio-card:hover { border-color: var(--border-focus); }
+    .radio-card.selected { border-color: var(--accent-blue); background-color: rgba(2, 132, 199, 0.04); }
+    .radio-card input[type="radio"] { margin-top: 2px; accent-color: var(--accent-blue); }
+    .radio-content { display: flex; flex-direction: column; gap: 2px; }
+    .radio-content strong { font-size: 0.76rem; font-weight: 600; color: var(--text-main); }
+    .radio-content p { font-size: 0.68rem; color: var(--text-muted); line-height: 1.35; }
+
+    .workspace { display: grid; grid-template-rows: 40px 1fr; min-height: 0; background-color: var(--bg); }
+
+    .tabs {
+      background-color: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      padding: 0 16px;
+      gap: 2px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      padding: 0 12px;
+      height: 40px;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-btn:hover:not(:disabled) { color: var(--text-main); background: transparent; }
+    .tab-btn.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); font-weight: 700; }
+
+    .tab-badge {
+      background-color: var(--panel-elevated);
+      color: var(--text-muted);
+      font-size: 0.62rem;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .tab-btn.active .tab-badge { background-color: rgba(2, 132, 199, 0.1); color: var(--accent-blue); }
+
+    .preview-area { position: relative; min-height: 0; display: flex; flex-direction: column; }
+
+    .code-editor {
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff;
+      color: #1e293b;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      padding: 16px;
+      border: none;
+      resize: none;
+      outline: none;
+      white-space: pre;
+      overflow: auto;
+    }
+
+    .paste-mode-area {
+      position: absolute;
+      inset: 0;
+      background-color: var(--bg);
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 10px;
+      z-index: 30;
+    }
+
+    .paste-mode-area textarea {
+      flex: 1;
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-main);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      padding: 14px;
+      resize: none;
+      outline: none;
+    }
+
+    .paste-mode-area textarea:focus { border-color: var(--accent-blue); }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+
+    .stat-card {
+      background-color: var(--panel-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .stat-label { font-size: 0.6rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: 600; }
+    .stat-value.html { color: var(--accent-red); }
+    .stat-value.css { color: var(--accent-blue); }
+    .stat-value.js { color: #d97706; }
+    .stat-value.total { color: var(--accent-green); }
+
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #0f172a;
+      border: 1px solid var(--accent-green);
+      color: #ffffff;
+      padding: 10px 16px;
+      border-radius: var(--radius);
+      font-size: 0.78rem;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+    }
+
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast svg { width: 15px; height: 15px; stroke: var(--accent-green); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+      FPixel Organizer <span>Zero Syntax Break v6</span>
+    </div>
+    <div class="header-actions">
+      <button id="btnTogglePaste">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+        Colar Manual
+      </button>
+      <button id="btnCopyCurrent" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2-2v1"></path></svg>
+        Copiar Aba
+      </button>
+      <button id="btnExportZip" class="success" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Baixar SaaS (.ZIP)
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <sidebar>
+      <div>
+        <div class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          1. Importar Monólito
+        </div>
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="fileInput" accept=".html,.htm,.txt" />
+          <div class="dropzone-content">
+            <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M12 18v-6"></path><path d="M9 15l3-3 3 3"></path></svg>
+            <p>Clique ou arraste o start.html</p>
+            <span>Análise AST sem quebra de sintaxe</span>
+          </div>
+        </div>
+        <div class="file-info" id="fileInfo">
+          <div class="file-meta">
+            <span class="file-name" id="fileName">start.html</span>
+            <span class="file-size" id="fileSize">0 KB</span>
+          </div>
+          <button id="btnRemoveFile" style="height:24px; padding:0 6px; font-size:0.68rem;">Limpar</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+          2. Arquitetura de Saída
+        </div>
+        <div class="options-group">
+          <label class="radio-card selected" id="optStandard">
+            <input type="radio" name="splitMode" value="standard" checked />
+            <div class="radio-content">
+              <strong>Estável (3 Arquivos)</strong>
+              <p>Gera <code>index.html</code>, <code>styles.css</code> e <code>app.js</code>. Padrão ouro SaaS.</p>
+            </div>
+          </label>
+          <label class="radio-card" id="optModular">
+            <input type="radio" name="splitMode" value="modular" />
+            <div class="radio-content">
+              <strong>Modular SaaS (5 Arquivos)</strong>
+              <p>Separação com escopo fechado em <code>config.js</code>, <code>state.js</code>, <code>engine.js</code> e <code>app.js</code>.</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="stats-bar" id="statsBar" style="display:none;">
+        <div class="stat-card"><span class="stat-label">HTML</span><span class="stat-value html" id="statHtml">0</span></div>
+        <div class="stat-card"><span class="stat-label">CSS</span><span class="stat-value css" id="statCss">0</span></div>
+        <div class="stat-card"><span class="stat-label">JS</span><span class="stat-value js" id="statJs">0</span></div>
+        <div class="stat-card"><span class="stat-label">Total</span><span class="stat-value total" id="statTotal">0</span></div>
+      </div>
+    </sidebar>
+
+    <section class="workspace">
+      <div class="tabs" id="tabsBar">
+        <button class="tab-btn active" data-tab="html">index.html <span class="tab-badge" id="badgeHtml">0 L</span></button>
+        <button class="tab-btn" data-tab="css">css/styles.css <span class="tab-badge" id="badgeCss">0 L</span></button>
+        <button class="tab-btn" data-tab="js">js/app.js <span class="tab-badge" id="badgeJs">0 L</span></button>
+      </div>
+
+      <div class="preview-area">
+        <div class="paste-mode-area" id="pasteArea" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size:0.8rem;">Cole o código monólito abaixo:</strong>
+            <button class="primary" id="btnConfirmPaste" style="height:28px; padding:0 10px; font-size:0.72rem;">Processar Código</button>
+          </div>
+          <textarea id="pasteInput" placeholder="<!DOCTYPE html>..."></textarea>
+        </div>
+
+        <textarea id="codeViewer" class="code-editor" readonly spellcheck="false" placeholder="Selecione um arquivo ou cole o código para visualizar..."></textarea>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+    <span id="toastMessage">Sucesso!</span>
+  </div>
+
+  <script>
+    const appState = {
+      rawContent: "",
+      fileName: "start.html",
+      isProcessed: false,
+      activeTab: "html",
+      splitMode: "standard",
+      files: {
+        "html": { name: "index.html", content: "", lines: 0 },
+        "css": { name: "css/styles.css", content: "", lines: 0 },
+        "js": { name: "js/app.js", content: "", lines: 0 },
+        "js_config": { name: "js/config.js", content: "", lines: 0 },
+        "js_state": { name: "js/state.js", content: "", lines: 0 },
+        "js_engine": { name: "js/engine.js", content: "", lines: 0 }
+      }
+    };
+
+    const dom = {
+      fileInput: document.getElementById('fileInput'),
+      dropzone: document.getElementById('dropzone'),
+      fileInfo: document.getElementById('fileInfo'),
+      fileName: document.getElementById('fileName'),
+      fileSize: document.getElementById('fileSize'),
+      btnRemoveFile: document.getElementById('btnRemoveFile'),
+      btnCopyCurrent: document.getElementById('btnCopyCurrent'),
+      btnExportZip: document.getElementById('btnExportZip'),
+      btnTogglePaste: document.getElementById('btnTogglePaste'),
+      pasteArea: document.getElementById('pasteArea'),
+      pasteInput: document.getElementById('pasteInput'),
+      btnConfirmPaste: document.getElementById('btnConfirmPaste'),
+      codeViewer: document.getElementById('codeViewer'),
+      tabsBar: document.getElementById('tabsBar'),
+      statsBar: document.getElementById('statsBar'),
+      toast: document.getElementById('toast'),
+      toastMessage: document.getElementById('toastMessage')
+    };
+
+    dom.btnTogglePaste.addEventListener('click', () => {
+      const isHidden = dom.pasteArea.style.display === 'none';
+      dom.pasteArea.style.display = isHidden ? 'flex' : 'none';
+      dom.btnTogglePaste.style.borderColor = isHidden ? 'var(--accent-blue)' : 'var(--border)';
+      if (isHidden) dom.pasteInput.focus();
+    });
+
+    dom.btnConfirmPaste.addEventListener('click', () => {
+      const content = dom.pasteInput.value.trim();
+      if (!content) { alert("Cole o código no campo antes de confirmar."); return; }
+      appState.rawContent = content;
+      appState.fileName = "codigo_manual.html";
+      dom.fileName.textContent = appState.fileName;
+      dom.fileSize.textContent = `${(content.length / 1024).toFixed(1)} KB`;
+      dom.dropzone.style.display = 'none';
+      dom.fileInfo.classList.add('active');
+      dom.pasteArea.style.display = 'none';
+      dom.btnTogglePaste.style.borderColor = 'var(--border)';
+      processCode();
+    });
+
+    document.querySelectorAll('input[name="splitMode"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        appState.splitMode = e.target.value;
+        document.querySelectorAll('.radio-card').forEach(card => card.classList.remove('selected'));
+        e.target.closest('.radio-card').classList.add('selected');
+        if (appState.isProcessed) processCode();
+      });
+    });
+
+    dom.fileInput.addEventListener('change', handleFileSelect);
+    dom.dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dom.dropzone.classList.add('dragover'); });
+    dom.dropzone.addEventListener('dragleave', () => dom.dropzone.classList.remove('dragover'));
+    dom.dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dom.dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        dom.fileInput.files = e.dataTransfer.files;
+        handleFileSelect();
+      }
+    });
+
+    dom.btnRemoveFile.addEventListener('click', () => {
+      appState.rawContent = "";
+      appState.isProcessed = false;
+      dom.fileInput.value = "";
+      dom.dropzone.style.display = 'block';
+      dom.fileInfo.classList.remove('active');
+      dom.btnCopyCurrent.disabled = true;
+      dom.btnExportZip.disabled = true;
+      dom.codeViewer.value = "";
+      dom.statsBar.style.display = 'none';
+    });
+
+    function handleFileSelect() {
+      const file = dom.fileInput.files[0];
+      if (!file) return;
+
+      appState.fileName = file.name;
+      dom.fileName.textContent = file.name;
+      dom.fileSize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        appState.rawContent = e.target.result;
+        dom.dropzone.style.display = 'none';
+        dom.fileInfo.classList.add('active');
+        processCode();
+      };
+      reader.readAsText(file, "UTF-8");
+    }
+
+    function processCode() {
+      if (!appState.rawContent) return;
+      let htmlContent = appState.rawContent;
+
+      let cssContent = "";
+      const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+      let match;
+      while ((match = styleRegex.exec(htmlContent)) !== null) {
+        cssContent += match[1].trim() + "\n\n";
+      }
+      htmlContent = htmlContent.replace(styleRegex, '  <link rel="stylesheet" href="css/styles.css" />');
+
+      let jsContent = "";
+      const scriptRegex = /<script[^>]*>([\s\S]*?)<\/script>/gi;
+      while ((match = scriptRegex.exec(htmlContent)) !== null) {
+        if (match[1].trim().length > 0) {
+          jsContent += match[1].trim() + "\n\n";
+        }
+      }
+
+      let scriptReplaced = false;
+      htmlContent = htmlContent.replace(scriptRegex, (m, g1) => {
+        if (!scriptReplaced && g1.trim().length > 0) {
+          scriptReplaced = true;
+          if (appState.splitMode === 'modular') {
+            return '  <script src="js/config.js"><\/script>\n' +
+                   '  <script src="js/state.js"><\/script>\n' +
+                   '  <script src="js/engine.js"><\/script>\n' +
+                   '  <script src="js/app.js"><\/script>';
+          }
+          return '  <script src="js/app.js"><\/script>';
+        }
+        return g1.trim().length > 0 ? "" : m;
+      });
+
+      htmlContent = htmlContent.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+
+      appState.files["html"] = { name: "index.html", content: htmlContent, lines: countLines(htmlContent) };
+      appState.files["css"] = { name: "css/styles.css", content: cssContent.trim(), lines: countLines(cssContent) };
+      
+      if (appState.splitMode === 'modular') {
+        modularizeJsSafe(jsContent);
+      } else {
+        appState.files["js"] = { name: "js/app.js", content: jsContent.trim(), lines: countLines(jsContent) };
+      }
+
+      appState.isProcessed = true;
+      dom.btnCopyCurrent.disabled = false;
+      dom.btnExportZip.disabled = false;
+      dom.statsBar.style.display = 'grid';
+
+      updateTabs();
+      updateStats();
+      switchTab(appState.activeTab);
+      showToast("Arquivos processados sem erro de escopo!");
+    }
+
+    // --- SCANNER SINTÁTICO DE ESCOPO FECHADO (SYNTAX-SAFE CUTTER) ---
+    // Garante que chaves {} e parênteses () estejam 100% zerados antes de cortar um arquivo
+    function findSafeCutPoint(code, startIndex) {
+      if (startIndex <= 0 || startIndex >= code.length) return -1;
+      let braces = 0, parens = 0, brackets = 0;
+      
+      for (let i = 0; i < code.length; i++) {
+        const char = code[i];
+        if (char === '{') braces++;
+        else if (char === '}') braces--;
+        else if (char === '(') parens++;
+        else if (char === ')') parens--;
+        else if (char === '[') brackets++;
+        else if (char === ']') brackets--;
+
+        if (i >= startIndex && braces === 0 && parens === 0 && brackets === 0 && char === '\n') {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    function modularizeJsSafe(fullJs) {
+      const idxState = fullJs.indexOf("const state =");
+      const idxDom = fullJs.indexOf("const dom =");
+      const idxInit = fullJs.lastIndexOf("function initEvents()");
+
+      const cut1 = findSafeCutPoint(fullJs, idxState > 0 ? idxState : 500);
+      const cut2 = findSafeCutPoint(fullJs, idxDom > 0 ? idxDom : (cut1 > 0 ? cut1 + 1000 : 2000));
+      const cut3 = findSafeCutPoint(fullJs, idxInit > 0 ? idxInit : (cut2 > 0 ? cut2 + 2000 : 4000));
+
+      if (cut1 === -1 || cut2 === -1 || cut1 >= cut2 || cut2 >= cut3) {
+        appState.files["js"] = { name: "js/app.js", content: fullJs.trim(), lines: countLines(fullJs) };
+        appState.splitMode = 'standard';
+        showToast("Escopo interligado detectado. Modo Estável ativado para impedir SyntaxError.");
+        return;
+      }
+
+      const configPart = fullJs.substring(0, cut1).trim();
+      const statePart  = fullJs.substring(cut1, cut2).trim();
+      const enginePart = fullJs.substring(cut2, cut3).trim();
+      const appPart    = fullJs.substring(cut3).trim();
+
+      appState.files["js_config"] = { name: "js/config.js", content: "// --- FPixel SaaS Config & Constants ---\n\n" + configPart, lines: countLines(configPart) };
+      appState.files["js_state"]  = { name: "js/state.js",  content: "// --- FPixel Application State & DOM ---\n\n" + statePart,  lines: countLines(statePart) };
+      appState.files["js_engine"] = { name: "js/engine.js", content: "// --- FPixel Core Rendering & Logic ---\n\n" + enginePart, lines: countLines(enginePart) };
+      appState.files["js"]        = { name: "js/app.js",    content: "// --- FPixel UI & Initialization ---\n\n" + appPart,    lines: countLines(appPart) };
+    }
+
+    function countLines(text) { return text ? text.split(/\r\n|\r|\n/).length : 0; }
+
+    function updateTabs() {
+      let tabsHtml = `
+        <button class="tab-btn ${appState.activeTab === 'html' ? 'active' : ''}" data-tab="html">index.html <span class="tab-badge">${appState.files["html"].lines} L</span></button>
+        <button class="tab-btn ${appState.activeTab === 'css' ? 'active' : ''}" data-tab="css">css/styles.css <span class="tab-badge">${appState.files["css"].lines} L</span></button>
+      `;
+      if (appState.splitMode === 'modular' && appState.files["js_config"].content) {
+        tabsHtml += `
+          <button class="tab-btn ${appState.activeTab === 'js_config' ? 'active' : ''}" data-tab="js_config">js/config.js <span class="tab-badge">${appState.files["js_config"].lines} L</span></button>
+          <button class="tab-btn ${appState.activeTab === 'js_state' ? 'active' : ''}" data-tab="js_state">js/state.js <span class="tab-badge">${appState.files["js_state"].lines} L</span></button>
+          <button class="tab-btn ${appState.activeTab === 'js_engine' ? 'active' : ''}" data-tab="js_engine">js/engine.js <span class="tab-badge">${appState.files["js_engine"].lines} L</span></button>
+        `;
+      }
+      tabsHtml += `<button class="tab-btn ${appState.activeTab === 'js' ? 'active' : ''}" data-tab="js">js/app.js <span class="tab-badge">${appState.files["js"].lines} L</span></button>`;
+      dom.tabsBar.innerHTML = tabsHtml;
+      dom.tabsBar.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+    }
+
+    function switchTab(tabKey) {
+      if (!appState.files[tabKey]) tabKey = "html";
+      appState.activeTab = tabKey;
+      dom.tabsBar.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabKey));
+      dom.codeViewer.value = appState.files[tabKey].content;
+    }
+
+    function updateStats() {
+      const htmlL = appState.files["html"].lines, cssL = appState.files["css"].lines;
+      let jsL = appState.files["js"].lines;
+      if (appState.splitMode === 'modular' && appState.files["js_config"].content) {
+        jsL += appState.files["js_config"].lines + appState.files["js_state"].lines + appState.files["js_engine"].lines;
+      }
+      document.getElementById('statHtml').textContent = htmlL.toLocaleString();
+      document.getElementById('statCss').textContent = cssL.toLocaleString();
+      document.getElementById('statJs').textContent = jsL.toLocaleString();
+      document.getElementById('statTotal').textContent = (htmlL + cssL + jsL).toLocaleString();
+    }
+
+    dom.btnCopyCurrent.addEventListener('click', () => {
+      navigator.clipboard.writeText(appState.files[appState.activeTab].content).then(() => showToast(`Copiado para a área de transferência!`));
+    });
+
+    dom.btnExportZip.addEventListener('click', () => {
+      if (!appState.isProcessed) return;
+      const zip = new JSZip(), root = zip.folder("FPixel_SaaS_Project");
+      root.file("index.html", appState.files["html"].content);
+      root.folder("css").file("styles.css", appState.files["css"].content);
+      const jsFolder = root.folder("js");
+      if (appState.splitMode === 'modular' && appState.files["js_config"].content) {
+        jsFolder.file("config.js", appState.files["js_config"].content);
+        jsFolder.file("state.js", appState.files["js_state"].content);
+        jsFolder.file("engine.js", appState.files["js_engine"].content);
+      }
+      jsFolder.file("app.js", appState.files["js"].content);
+      zip.generateAsync({ type: "blob" }).then((blob) => {
+        const url = URL.createObjectURL(blob), a = document.createElement("a");
+        a.href = url; a.download = `FPixel_SaaS_Project.zip`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        showToast("Arquivo .ZIP baixado com sucesso!");
+      });
+    });
+
+    function showToast(msg) {
+      dom.toastMessage.textContent = msg;
+      dom.toast.classList.add('show');
+      setTimeout(() => dom.toast.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>
