@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FPixel Organizer index </title>
+  <title>FPixel2 | index organizer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -369,7 +369,7 @@
       </button>
       <button id="btnExportZip" class="success" disabled>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        Baixar SaaS (.ZIP)
+        Baixar (.ZIP)
       </button>
     </div>
   </header>
@@ -411,13 +411,13 @@
             <input type="radio" name="splitMode" value="standard" checked />
             <div class="radio-content">
               <strong>Estável (3 Arquivos)</strong>
-              <p>Gera <code>index.html</code>, <code>styles.css</code> e <code>app.js</code>. Padrão ouro SaaS.</p>
+              <p>Gera <code>index.html</code>, <code>styles.css</code> e <code>app.js</code>. Padrão ouro.</p>
             </div>
           </label>
           <label class="radio-card" id="optModular">
             <input type="radio" name="splitMode" value="modular" />
             <div class="radio-content">
-              <strong>Modular SaaS (5 Arquivos)</strong>
+              <strong>Modular (5 Arquivos)</strong>
               <p>Separação com escopo fechado em <code>config.js</code>, <code>state.js</code>, <code>engine.js</code> e <code>app.js</code>.</p>
             </div>
           </label>
@@ -624,7 +624,7 @@
       updateTabs();
       updateStats();
       switchTab(appState.activeTab);
-      showToast("SaaS fatiado e layout auto-corrigido com sucesso!");
+      showToast("fatiado e layout auto-corrigido com sucesso!");
     }
 
     // Corrige automaticamente qualquer corrupção anterior no generateHtml()
@@ -683,7 +683,7 @@
       const enginePart = fullJs.substring(cut2, cut3).trim();
       const appPart    = fullJs.substring(cut3).trim();
 
-      appState.files["js_config"] = { name: "js/config.js", content: "// --- FPixel SaaS Config & Constants ---\n\n" + configPart, lines: countLines(configPart) };
+      appState.files["js_config"] = { name: "js/config.js", content: "// --- FPixel2 Config & Constants ---\n\n" + configPart, lines: countLines(configPart) };
       appState.files["js_state"]  = { name: "js/state.js",  content: "// --- FPixel Application State & DOM ---\n\n" + statePart,  lines: countLines(statePart) };
       appState.files["js_engine"] = { name: "js/engine.js", content: "// --- FPixel Core Rendering & Logic ---\n\n" + enginePart, lines: countLines(enginePart) };
       appState.files["js"]        = { name: "js/app.js",    content: "// --- FPixel UI & Initialization ---\n\n" + appPart,    lines: countLines(appPart) };
@@ -733,7 +733,7 @@
 
     dom.btnExportZip.addEventListener('click', () => {
       if (!appState.isProcessed) return;
-      const zip = new JSZip(), root = zip.folder("FPixel_SaaS_Project");
+      const zip = new JSZip(), root = zip.folder("FPixel2_index");
       root.file("index.html", appState.files["html"].content);
       root.folder("css").file("styles.css", appState.files["css"].content);
       const jsFolder = root.folder("js");
@@ -745,7 +745,7 @@
       jsFolder.file("app.js", appState.files["js"].content);
       zip.generateAsync({ type: "blob" }).then((blob) => {
         const url = URL.createObjectURL(blob), a = document.createElement("a");
-        a.href = url; a.download = `FPixel_SaaS_Project.zip`;
+        a.href = url; a.download = `FPixel2_index.zip`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
         showToast("Arquivo .ZIP baixado com sucesso!");
       });
